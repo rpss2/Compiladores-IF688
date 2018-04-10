@@ -84,55 +84,43 @@ public final class SetGenerator {
          * implemente aqui o método para retornar o conjunto follow
         */
         
-        Nonterminal startSymbol = g.getStartSymbol();
-        Set<GeneralSymbol> currentSet; 
-        currentSet = follow.get(startSymbol);
-        currentSet.add(SpecialSymbol.EOF);
-        
         Collection<Production> productions = g.getProductions();
-        Iterator<GeneralSymbol> itSymbols, aux, aux2;
-        GeneralSymbol s, b = null, f;
-        boolean epsilon = false;
+        Nonterminal startSymbol = g.getStartSymbol();
+        Set<GeneralSymbol> currentSet;
+        follow.get(startSymbol).add(SpecialSymbol.EOF);
         
-        for (Production p : productions) {
-        	itSymbols = p.iterator();
-        	aux = p.iterator();
-        	while(itSymbols.hasNext()) {
-        		s = itSymbols.next();
-        		if(aux.hasNext())
-        			b = aux.next();
-        		if(!s.equals(SpecialSymbol.EPSILON) && !((Symbol) s).isTerminal()) {
-        			currentSet = follow.get(s);
-        			if(s == b) {
-        				if(aux.hasNext()) {
-        					b = aux.next();
+        Set<GeneralSymbol> trailer;
+        Map<Nonterminal, Set<GeneralSymbol>> followAux; // usado para comparar com follow
+        boolean changing = true;
+        
+        while(changing) {
+        	followAux = new HashMap<Nonterminal, Set<GeneralSymbol>>();
+        	for (Nonterminal n : follow.keySet()) { // copia follow para follow_aux
+        		trailer = new HashSet<GeneralSymbol>();
+        		trailer.addAll(follow.get(n));
+        		followAux.put(n, trailer);
+        	}
+        	//Baseado no Algoritmo do livro ENGINEERING A COMPILER (page 106)
+        	for(Production p : productions) {
+        		trailer = new HashSet<GeneralSymbol>();
+        		trailer.addAll(follow.get(p.getNonterminal()));
+        		for (int i = p.getProduction().size() - 1; i >= 0; i--) {
+        			if(p.getProduction().get(i) instanceof Nonterminal) {
+        				follow.get(p.getProduction().get(i)).addAll(trailer);
+        				if(first.get(p.getProduction().get(i)).contains(SpecialSymbol.EPSILON)) {
+        					trailer.addAll(first.get(p.getProduction().get(i)));
+        					trailer.remove(SpecialSymbol.EPSILON);
         				} else {
-        					epsilon = true;
+        					trailer = new HashSet<GeneralSymbol>();
+        					trailer.addAll(first.get(p.getProduction().get(i)));
         				}
+        			} else {
+        				trailer = new HashSet<GeneralSymbol>();
+        				trailer.add(p.getProduction().get(i));
         			}
-    				if(((Symbol) b).isTerminal()) {
-    					currentSet.add(b);
-    				} else {
-        				aux2 = first.get(b).iterator();
-        				while(aux2.hasNext()) {
-        					f = aux2.next();
-        					if(!f.equals(SpecialSymbol.EPSILON)) {
-        						currentSet.add(f);
-        					} else {
-        						epsilon = true;
-        					}
-        				}
-    				}
-    				if(epsilon) {
-    					aux2 = follow.get(p.getNonterminal()).iterator();
-    					while(aux2.hasNext()) {
-    						currentSet.add(aux2.next());
-    					}
-    					epsilon = false;
-    				}
-    				follow.put((Nonterminal) s, currentSet);
         		}
         	}
+        	changing = !follow.equals(followAux);
         }
         
         return follow;

@@ -36,8 +36,13 @@ public final class Table {
         	while(it_first.hasNext()) {
         		t_first = it_first.next();
         		if(!t_first.equals(SpecialSymbol.EPSILON) && !p.getProduction().contains(SpecialSymbol.EPSILON)) {
-        			line = new LL1Key(nonTerminal, t_first);
-        			parsingTable.put(line, p.getProduction());
+        			if(p.getProduction().get(0) instanceof Terminal) {
+        				line = new LL1Key(nonTerminal, p.getProduction().get(0));
+            			parsingTable.put(line, p.getProduction());
+        			} else {
+	        			line = new LL1Key(nonTerminal, t_first);
+	        			parsingTable.put(line, p.getProduction());
+        			}
         		} else if(t_first.equals(SpecialSymbol.EPSILON) && p.getProduction().contains(SpecialSymbol.EPSILON)) {
         			it_follow = follow.get(nonTerminal).iterator();
         			while(it_follow.hasNext()) {
