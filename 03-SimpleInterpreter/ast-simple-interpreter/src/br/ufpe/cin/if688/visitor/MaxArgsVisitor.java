@@ -35,12 +35,9 @@ public class MaxArgsVisitor implements IVisitor<Integer> {
 	@Override
 	public Integer visit(PrintStm s) {
 		ExpList expList = s.getExps();
-		int cont = 0;
+		int cont = 1;
 		while(expList instanceof PairExpList) {
 			expList = ((PairExpList) expList).getTail();
-			cont++;
-		}
-		if(expList instanceof LastExpList) {
 			cont++;
 		}
 		return Math.max(cont, this.visit(s.getExps()));

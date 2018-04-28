@@ -26,74 +26,82 @@ public class Interpreter implements IVisitor<Table> {
 
 	@Override
 	public Table visit(Stm s) {
-		// TODO Auto-generated method stub
-		return null;
+		return s.accept(this);
 	}
 
 	@Override
 	public Table visit(AssignStm s) {
-		// TODO Auto-generated method stub
-		return null;
+		String id = s.getId();
+		Exp exp = s.getExp();
+		Table t = exp.accept(this);
+		t.id = id;
+		this.t = t;
+		return this.t;
 	}
 
 	@Override
 	public Table visit(CompoundStm s) {
-		// TODO Auto-generated method stub
-		return null;
+		s.getStm1().accept(this);
+		s.getStm2().accept(this);
+		return this.t;
 	}
 
 	@Override
 	public Table visit(PrintStm s) {
-		// TODO Auto-generated method stub
-		return null;
+		s.getExps().accept(this);
+		return this.t;
 	}
 
 	@Override
 	public Table visit(Exp e) {
-		// TODO Auto-generated method stub
-		return null;
+		return e.accept(this);
 	}
 
 	@Override
 	public Table visit(EseqExp e) {
-		// TODO Auto-generated method stub
-		return null;
+		IntAndTableVisitor intAndTableVisitor = new IntAndTableVisitor(this.t);
+		double res = intAndTableVisitor.visit(e).result;
+		return new Table("eseq", res, this.t);
 	}
 
 	@Override
 	public Table visit(IdExp e) {
-		// TODO Auto-generated method stub
-		return null;
+		IntAndTableVisitor intAndTableVisitor = new IntAndTableVisitor(this.t);
+		double res = intAndTableVisitor.visit(e).result;
+		return new Table("id", res, this.t);
 	}
 
 	@Override
 	public Table visit(NumExp e) {
-		// TODO Auto-generated method stub
-		return null;
+		IntAndTableVisitor intAndTableVisitor = new IntAndTableVisitor(this.t);
+		double res = intAndTableVisitor.visit(e).result;
+		return new Table("num", res, this.t);
 	}
 
 	@Override
 	public Table visit(OpExp e) {
-		// TODO Auto-generated method stub
-		return null;
+		IntAndTableVisitor intAndTableVisitor = new IntAndTableVisitor(this.t);
+		double res = intAndTableVisitor.visit(e).result;
+		return new Table("op", res, this.t);
 	}
 
 	@Override
 	public Table visit(ExpList el) {
-		// TODO Auto-generated method stub
-		return null;
+		return el.accept(this);
 	}
 
 	@Override
 	public Table visit(PairExpList el) {
-		// TODO Auto-generated method stub
-		return null;
+		double value = el.getHead().accept(this).value;
+		System.out.println(value);
+		return el.getTail().accept(this);
 	}
 
 	@Override
 	public Table visit(LastExpList el) {
-		// TODO Auto-generated method stub
-		return null;
+		Table t = el.getHead().accept(this);
+		System.out.println(t.value);
+		return t;
 	}
 
 

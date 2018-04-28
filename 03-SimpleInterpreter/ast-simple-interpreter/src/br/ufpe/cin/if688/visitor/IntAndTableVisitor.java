@@ -48,32 +48,55 @@ public class IntAndTableVisitor implements IVisitor<IntAndTable> {
 
 	@Override
 	public IntAndTable visit(Exp e) {
-		// TODO Auto-generated method stub
-		return null;
+		return e.accept(this);
 	}
 
 	@Override
 	public IntAndTable visit(EseqExp e) {
-		// TODO Auto-generated method stub
-		return null;
+		this.t = new Interpreter(this.t).visit(e.getStm());
+		return e.getExp().accept(this);
 	}
 
 	@Override
 	public IntAndTable visit(IdExp e) {
-		// TODO Auto-generated method stub
-		return null;
+		String id = e.getId();
+		return new IntAndTable(searchId(id, this.t), this.t);
 	}
-
+	
 	@Override
 	public IntAndTable visit(NumExp e) {
-		// TODO Auto-generated method stub
-		return null;
+		return new IntAndTable(e.getNum(), this.t);
 	}
+	
+	public double searchId(String id, Table t) {
+		if(id == t.id) {
+			return t.value;
+		}
+		return searchId(id, t.tail);
+	}
+
 
 	@Override
 	public IntAndTable visit(OpExp e) {
-		// TODO Auto-generated method stub
-		return null;
+		IntAndTable operatingLeft = e.getLeft().accept(this);
+		IntAndTable operatingRight = e.getRight().accept(this);
+		int operator = e.getOper();
+		double res = 0;
+		switch (operator) {
+		case OpExp.Plus:
+			res = operatingLeft.result + operatingRight.result;
+			break;
+		case OpExp.Minus:
+			res = operatingLeft.result - operatingRight.result;		
+			break;
+		case OpExp.Times:
+			res = operatingLeft.result * operatingRight.result;
+			break;
+		case OpExp.Div:
+			res = operatingLeft.result / operatingRight.result;
+			break;
+		}
+		return new IntAndTable(res, this.t);
 	}
 
 	@Override
