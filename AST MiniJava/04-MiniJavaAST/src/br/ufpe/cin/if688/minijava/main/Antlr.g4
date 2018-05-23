@@ -51,4 +51,4 @@ INTEGER_LITERAL: [1-9][0-9]* | '0';
 IDENTIFIER: [_a-zA-Z$][a-zA-Z0-9$_]*;
 MULT_COMMENT: '/*' .*? '*/' -> skip;
 COMMENT: '//' ~[\r\n]* -> skip;
-WS: [ \t\r\n] -> skip;
+WS: [ \t\r\n]+ -> skip;

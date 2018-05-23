@@ -1,4 +1,4 @@
-package test.resources;
+//package test.resources;
 
 class BubbleSort{
     public static void main(String[] a){

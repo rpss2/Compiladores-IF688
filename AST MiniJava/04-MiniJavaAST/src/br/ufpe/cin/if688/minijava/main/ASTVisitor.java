@@ -5,9 +5,16 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import com.sun.org.apache.xpath.internal.operations.And;
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.IntArrayData;
-
+import antlr.AntlrParser.ClassDeclarationContext;
+import antlr.AntlrParser.ExpressionContext;
+import antlr.AntlrParser.GoalContext;
+import antlr.AntlrParser.IdentifierContext;
+import antlr.AntlrParser.MainClassContext;
+import antlr.AntlrParser.MethodDeclarationContext;
+import antlr.AntlrParser.StatementContext;
+import antlr.AntlrParser.TypeContext;
+import antlr.AntlrParser.VarDeclarationContext;
+import antlr.AntlrVisitor;
 import br.ufpe.cin.if688.minijava.ast.ArrayAssign;
 import br.ufpe.cin.if688.minijava.ast.ArrayLength;
 import br.ufpe.cin.if688.minijava.ast.ArrayLookup;
@@ -50,22 +57,13 @@ import br.ufpe.cin.if688.minijava.ast.Type;
 import br.ufpe.cin.if688.minijava.ast.VarDecl;
 import br.ufpe.cin.if688.minijava.ast.VarDeclList;
 import br.ufpe.cin.if688.minijava.ast.While;
-import br.ufpe.cin.if688.minijava.main.AntlrParser.ClassDeclarationContext;
-import br.ufpe.cin.if688.minijava.main.AntlrParser.ExpressionContext;
-import br.ufpe.cin.if688.minijava.main.AntlrParser.GoalContext;
-import br.ufpe.cin.if688.minijava.main.AntlrParser.IdentifierContext;
-import br.ufpe.cin.if688.minijava.main.AntlrParser.MainClassContext;
-import br.ufpe.cin.if688.minijava.main.AntlrParser.MethodDeclarationContext;
-import br.ufpe.cin.if688.minijava.main.AntlrParser.StatementContext;
-import br.ufpe.cin.if688.minijava.main.AntlrParser.TypeContext;
-import br.ufpe.cin.if688.minijava.main.AntlrParser.VarDeclarationContext;
 
 public class ASTVisitor implements AntlrVisitor<Object> {
 
 	@Override
 	public Object visit(ParseTree arg0) {
 		// TODO Auto-generated method stub
-		return null;
+		return arg0.accept(this);
 	}
 
 	@Override
@@ -235,11 +233,14 @@ public class ASTVisitor implements AntlrVisitor<Object> {
 			Exp printExp = (Exp) ctx.expression(0).accept(this);
 			new Print(printExp);
 		default:
-			Identifier ai = (Identifier) ctx.identifier().accept(this);
-			Exp ae1 = (Exp) ctx.expression(0).accept(this);
 			if(ctx.expression().size() == 1) {
+				System.out.println(ctx.getText());
+				Identifier ai = (Identifier) ctx.identifier().accept(this);
+				Exp ae1 = (Exp) ctx.expression(0).accept(this);
 				return new Assign(ai, ae1);
 			} else {
+				Identifier ai = (Identifier) ctx.identifier().accept(this);
+				Exp ae1 = (Exp) ctx.expression(0).accept(this);
 				Exp ae2 = (Exp) ctx.expression(1).accept(this);
 				return new ArrayAssign(ai, ae1, ae2);
 			}

@@ -1,6 +1,6 @@
 // Generated from Antlr.g4 by ANTLR 4.4
 
-	package br.ufpe.cin.if688.minijava.main;
+	package antlr;
 
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;

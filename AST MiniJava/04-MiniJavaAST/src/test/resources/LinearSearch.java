@@ -1,4 +1,4 @@
-package test.resources;
+//package test.resources;
 
 class LinearSearch{
     public static void main(String[] a){
