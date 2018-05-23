@@ -7,6 +7,9 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 import com.sun.xml.internal.bind.v2.runtime.unmarshaller.IntArrayData;
 
+import br.ufpe.cin.if688.minijava.ast.ArrayAssign;
+import br.ufpe.cin.if688.minijava.ast.Assign;
+import br.ufpe.cin.if688.minijava.ast.Block;
 import br.ufpe.cin.if688.minijava.ast.BooleanType;
 import br.ufpe.cin.if688.minijava.ast.ClassDecl;
 import br.ufpe.cin.if688.minijava.ast.ClassDeclExtends;
@@ -17,17 +20,20 @@ import br.ufpe.cin.if688.minijava.ast.Formal;
 import br.ufpe.cin.if688.minijava.ast.FormalList;
 import br.ufpe.cin.if688.minijava.ast.Identifier;
 import br.ufpe.cin.if688.minijava.ast.IdentifierType;
+import br.ufpe.cin.if688.minijava.ast.If;
 import br.ufpe.cin.if688.minijava.ast.IntArrayType;
 import br.ufpe.cin.if688.minijava.ast.IntegerType;
 import br.ufpe.cin.if688.minijava.ast.MainClass;
 import br.ufpe.cin.if688.minijava.ast.MethodDecl;
 import br.ufpe.cin.if688.minijava.ast.MethodDeclList;
+import br.ufpe.cin.if688.minijava.ast.Print;
 import br.ufpe.cin.if688.minijava.ast.Program;
 import br.ufpe.cin.if688.minijava.ast.Statement;
 import br.ufpe.cin.if688.minijava.ast.StatementList;
 import br.ufpe.cin.if688.minijava.ast.Type;
 import br.ufpe.cin.if688.minijava.ast.VarDecl;
 import br.ufpe.cin.if688.minijava.ast.VarDeclList;
+import br.ufpe.cin.if688.minijava.ast.While;
 import br.ufpe.cin.if688.minijava.main.AntlrParser.ClassDeclarationContext;
 import br.ufpe.cin.if688.minijava.main.AntlrParser.ExpressionContext;
 import br.ufpe.cin.if688.minijava.main.AntlrParser.GoalContext;
@@ -130,8 +136,37 @@ public class ASTVisitor implements AntlrVisitor<Object> {
 
 	@Override
 	public Object visitStatement(StatementContext ctx) {
-		// TODO Auto-generated method stub
-		return null;
+		String text = ctx.getStart().getText();
+		
+		switch (text) {
+		case "{":
+			StatementList asl = new StatementList();
+			for (StatementContext sc : ctx.statement()) {
+				asl.addElement((Statement) sc.accept(this));
+			}
+			return new Block(asl);
+		case "if":
+			Exp ae = (Exp) ctx.expression(0).accept(this);
+			Statement as1 = (Statement) ctx.statement(0).accept(this);
+			Statement as2 = (Statement) ctx.statement(1).accept(this);
+			return new If(ae, as1, as2);
+		case "while":
+			Exp exp = (Exp) ctx.expression(0).accept(this);
+			Statement as = (Statement) ctx.statement(0).accept(this);
+			return new While(exp, as);
+		case "System.out.println":
+			Exp printExp = (Exp) ctx.expression(0).accept(this);
+			new Print(printExp);
+		default:
+			Identifier ai = (Identifier) ctx.identifier().accept(this);
+			Exp ae1 = (Exp) ctx.expression(0).accept(this);
+			if(ctx.expression().size() == 1) {
+				return new Assign(ai, ae1);
+			} else {
+				Exp ae2 = (Exp) ctx.expression(1).accept(this);
+				return new ArrayAssign(ai, ae1, ae2);
+			}
+		}
 	}
 
 	@Override
