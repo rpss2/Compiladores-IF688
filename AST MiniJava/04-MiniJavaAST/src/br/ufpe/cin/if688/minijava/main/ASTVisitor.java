@@ -5,31 +5,47 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import com.sun.org.apache.xpath.internal.operations.And;
 import com.sun.xml.internal.bind.v2.runtime.unmarshaller.IntArrayData;
 
 import br.ufpe.cin.if688.minijava.ast.ArrayAssign;
+import br.ufpe.cin.if688.minijava.ast.ArrayLength;
+import br.ufpe.cin.if688.minijava.ast.ArrayLookup;
 import br.ufpe.cin.if688.minijava.ast.Assign;
 import br.ufpe.cin.if688.minijava.ast.Block;
 import br.ufpe.cin.if688.minijava.ast.BooleanType;
+import br.ufpe.cin.if688.minijava.ast.Call;
 import br.ufpe.cin.if688.minijava.ast.ClassDecl;
 import br.ufpe.cin.if688.minijava.ast.ClassDeclExtends;
 import br.ufpe.cin.if688.minijava.ast.ClassDeclList;
 import br.ufpe.cin.if688.minijava.ast.ClassDeclSimple;
 import br.ufpe.cin.if688.minijava.ast.Exp;
+import br.ufpe.cin.if688.minijava.ast.ExpList;
+import br.ufpe.cin.if688.minijava.ast.False;
 import br.ufpe.cin.if688.minijava.ast.Formal;
 import br.ufpe.cin.if688.minijava.ast.FormalList;
 import br.ufpe.cin.if688.minijava.ast.Identifier;
 import br.ufpe.cin.if688.minijava.ast.IdentifierType;
 import br.ufpe.cin.if688.minijava.ast.If;
 import br.ufpe.cin.if688.minijava.ast.IntArrayType;
+import br.ufpe.cin.if688.minijava.ast.IntegerLiteral;
 import br.ufpe.cin.if688.minijava.ast.IntegerType;
+import br.ufpe.cin.if688.minijava.ast.LessThan;
 import br.ufpe.cin.if688.minijava.ast.MainClass;
 import br.ufpe.cin.if688.minijava.ast.MethodDecl;
 import br.ufpe.cin.if688.minijava.ast.MethodDeclList;
+import br.ufpe.cin.if688.minijava.ast.Minus;
+import br.ufpe.cin.if688.minijava.ast.NewArray;
+import br.ufpe.cin.if688.minijava.ast.NewObject;
+import br.ufpe.cin.if688.minijava.ast.Not;
+import br.ufpe.cin.if688.minijava.ast.Plus;
 import br.ufpe.cin.if688.minijava.ast.Print;
 import br.ufpe.cin.if688.minijava.ast.Program;
 import br.ufpe.cin.if688.minijava.ast.Statement;
 import br.ufpe.cin.if688.minijava.ast.StatementList;
+import br.ufpe.cin.if688.minijava.ast.This;
+import br.ufpe.cin.if688.minijava.ast.Times;
+import br.ufpe.cin.if688.minijava.ast.True;
 import br.ufpe.cin.if688.minijava.ast.Type;
 import br.ufpe.cin.if688.minijava.ast.VarDecl;
 import br.ufpe.cin.if688.minijava.ast.VarDeclList;
@@ -120,8 +136,69 @@ public class ASTVisitor implements AntlrVisitor<Object> {
 
 	@Override
 	public Object visitExpression(ExpressionContext ctx) {
-		// TODO Auto-generated method stub
-		return null;
+		String start = ctx.getStart().getText(); //pegar o primeiro simbolo, pra saber 'new', 'int'...
+		int expSize = ctx.expression().size(); //saber qual a qtd de expression
+		int qtdChildren = ctx.getChildCount(); //saber o tamanho da expression
+		
+		//expression '.' identifier '(' ( expression ( ',' expression )* )? ')'
+		if(qtdChildren >= 5 && ctx.getChild(1).equals(".")) {
+			Exp exp = (Exp) ctx.expression(0).accept(this);
+			Identifier id = (Identifier) ctx.identifier().accept(this);
+			
+			ExpList listExp = new ExpList();
+			for(int i = 1; i < ctx.expression().size(); i++) {
+				listExp.addElement((Exp) ctx.expression(i).accept(this));
+			}
+			
+			return new Call(exp, id, listExp);
+		} else if(expSize == 2) { //expression ( '&&' | '<' | '+' | '-' | '*' ) expression
+			Exp ae1 = (Exp) ctx.expression(0).accept(this);
+			Exp ae2 = (Exp) ctx.expression(1).accept(this);
+			
+			switch (ctx.getChild(1).getText()) {
+			case "&&":
+				return new br.ufpe.cin.if688.minijava.ast.And(ae1, ae2);
+			case "<":
+				return new LessThan(ae1, ae2);
+			case "+":
+				return new Plus(ae1, ae2);
+			case "-":
+				return new Minus(ae1, ae2);
+			case "*":
+				return new Times(ae1, ae2);
+			default: //expression '[' expression ']'
+				return new ArrayLookup(ae1, ae2);
+			}
+		} else if(expSize == 1) {
+			Exp ae = (Exp) ctx.expression(0).accept(this);
+			switch (start) {
+			case "!": //'!' expression
+				return new Not(ae);
+			case "(": //'(' expression ')'
+				return ae;
+			case "new": //'new' 'int' '[' expression ']'
+				return new NewArray(ae);
+			default: //expression '.' 'length'
+				return new ArrayLength(ae);
+			}
+		} else {
+			switch (start) {
+				case "true": //'true'
+					return new True();
+				case "false": //'false'
+					return new False();
+				case "this": //'this'
+					return new This();
+				case "new": //'new' identifier '(' ')'
+					return new NewObject((Identifier) ctx.identifier().accept(this));
+				default: //identifier or INTEGER_LITERAL
+					if(start.matches("\\d+")) {
+						return new IntegerLiteral(Integer.parseInt(ctx.getStart().getText()));
+					} else {
+						return new Identifier(ctx.identifier().getText());
+					}
+			}
+		}
 	}
 
 	@Override
@@ -136,9 +213,9 @@ public class ASTVisitor implements AntlrVisitor<Object> {
 
 	@Override
 	public Object visitStatement(StatementContext ctx) {
-		String text = ctx.getStart().getText();
+		String start = ctx.getStart().getText();
 		
-		switch (text) {
+		switch (start) {
 		case "{":
 			StatementList asl = new StatementList();
 			for (StatementContext sc : ctx.statement()) {
