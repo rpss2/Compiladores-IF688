@@ -15,7 +15,7 @@ import br.ufpe.cin.if688.minijava.visitor.PrettyPrintVisitor;
 public class Main {
 
 	public static void main(String[] args) throws IOException {
-		InputStream stream = new FileInputStream("src/test/resources/QuickSort.java");
+		InputStream stream = new FileInputStream("src/test/resources/LinkedList.java");
 		ANTLRInputStream input = new ANTLRInputStream(stream);
 		AntlrLexer lexer = new AntlrLexer(input);
 		CommonTokenStream token = new CommonTokenStream(lexer);

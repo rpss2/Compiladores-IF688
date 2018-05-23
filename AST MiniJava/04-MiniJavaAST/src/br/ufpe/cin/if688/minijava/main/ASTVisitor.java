@@ -15,6 +15,7 @@ import antlr.AntlrParser.StatementContext;
 import antlr.AntlrParser.TypeContext;
 import antlr.AntlrParser.VarDeclarationContext;
 import antlr.AntlrVisitor;
+import br.ufpe.cin.if688.minijava.ast.And;
 import br.ufpe.cin.if688.minijava.ast.ArrayAssign;
 import br.ufpe.cin.if688.minijava.ast.ArrayLength;
 import br.ufpe.cin.if688.minijava.ast.ArrayLookup;
@@ -86,8 +87,7 @@ public class ASTVisitor implements AntlrVisitor<Object> {
 
 	@Override
 	public Object visitIdentifier(IdentifierContext ctx) {
-		Identifier id = new Identifier(ctx.getText());
-		return id;
+		return new Identifier(ctx.getText());
 	}
 
 	@Override
@@ -139,12 +139,12 @@ public class ASTVisitor implements AntlrVisitor<Object> {
 		int qtdChildren = ctx.getChildCount(); //saber o tamanho da expression
 		
 		//expression '.' identifier '(' ( expression ( ',' expression )* )? ')'
-		if(qtdChildren >= 5 && ctx.getChild(1).equals(".")) {
+		if(qtdChildren >= 5 && ctx.getChild(1).getText().equals(".")) {
 			Exp exp = (Exp) ctx.expression(0).accept(this);
 			Identifier id = (Identifier) ctx.identifier().accept(this);
 			
 			ExpList listExp = new ExpList();
-			for(int i = 1; i < ctx.expression().size(); i++) {
+			for(int i = 1; i < expSize; i++) {
 				listExp.addElement((Exp) ctx.expression(i).accept(this));
 			}
 			
@@ -155,7 +155,7 @@ public class ASTVisitor implements AntlrVisitor<Object> {
 			
 			switch (ctx.getChild(1).getText()) {
 			case "&&":
-				return new br.ufpe.cin.if688.minijava.ast.And(ae1, ae2);
+				return new And(ae1, ae2);
 			case "<":
 				return new LessThan(ae1, ae2);
 			case "+":
@@ -193,7 +193,7 @@ public class ASTVisitor implements AntlrVisitor<Object> {
 					if(start.matches("\\d+")) {
 						return new IntegerLiteral(Integer.parseInt(ctx.getStart().getText()));
 					} else {
-						return new Identifier(ctx.identifier().getText());
+						return (Identifier) ctx.identifier().accept(this);
 					}
 			}
 		}
@@ -231,10 +231,9 @@ public class ASTVisitor implements AntlrVisitor<Object> {
 			return new While(exp, as);
 		case "System.out.println":
 			Exp printExp = (Exp) ctx.expression(0).accept(this);
-			new Print(printExp);
+			return new Print(printExp);
 		default:
 			if(ctx.expression().size() == 1) {
-				System.out.println(ctx.getText());
 				Identifier ai = (Identifier) ctx.identifier().accept(this);
 				Exp ae1 = (Exp) ctx.expression(0).accept(this);
 				return new Assign(ai, ae1);
