@@ -35,13 +35,17 @@ import br.ufpe.cin.if688.minijava.ast.True;
 import br.ufpe.cin.if688.minijava.ast.Type;
 import br.ufpe.cin.if688.minijava.ast.VarDecl;
 import br.ufpe.cin.if688.minijava.ast.While;
+import br.ufpe.cin.if688.minijava.symboltable.Method;
 import br.ufpe.cin.if688.minijava.symboltable.SymbolTable;
+import br.ufpe.cin.if688.minijava.symboltable.Class;
 
 public class TypeCheckVisitor implements IVisitor<Type> {
 
 	private SymbolTable symbolTable;
+	private Class currClass;
+	private Method currMethod;
 
-	TypeCheckVisitor(SymbolTable st) {
+	public TypeCheckVisitor(SymbolTable st) {
 		symbolTable = st;
 	}
 
@@ -58,9 +62,17 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 	// Identifier i1,i2;
 	// Statement s;
 	public Type visit(MainClass n) {
+		
+		currClass = symbolTable.getClass(n.i1.s);
+		currMethod = symbolTable.getMethod("main", currClass.getId());
+		
 		n.i1.accept(this);
 		n.i2.accept(this);
 		n.s.accept(this);
+		
+		currMethod = null;
+		currClass = null;
+		
 		return null;
 	}
 
@@ -68,6 +80,9 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 	// VarDeclList vl;
 	// MethodDeclList ml;
 	public Type visit(ClassDeclSimple n) {
+		
+		currClass = symbolTable.getClass(n.i.s);
+		
 		n.i.accept(this);
 		for (int i = 0; i < n.vl.size(); i++) {
 			n.vl.elementAt(i).accept(this);
@@ -75,6 +90,9 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 		for (int i = 0; i < n.ml.size(); i++) {
 			n.ml.elementAt(i).accept(this);
 		}
+		
+		currClass = null;
+		
 		return null;
 	}
 
@@ -83,6 +101,9 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 	// VarDeclList vl;
 	// MethodDeclList ml;
 	public Type visit(ClassDeclExtends n) {
+		
+		currClass = symbolTable.getClass(n.i.s);
+		
 		n.i.accept(this);
 		n.j.accept(this);
 		for (int i = 0; i < n.vl.size(); i++) {
@@ -91,6 +112,9 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 		for (int i = 0; i < n.ml.size(); i++) {
 			n.ml.elementAt(i).accept(this);
 		}
+		
+		currClass = null;
+		
 		return null;
 	}
 
@@ -99,7 +123,7 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 	public Type visit(VarDecl n) {
 		n.t.accept(this);
 		n.i.accept(this);
-		return null;
+		return n.t;
 	}
 
 	// Type t;
@@ -129,23 +153,23 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 	public Type visit(Formal n) {
 		n.t.accept(this);
 		n.i.accept(this);
-		return null;
+		return n.t;
 	}
 
 	public Type visit(IntArrayType n) {
-		return null;
+		return new IntArrayType();
 	}
 
 	public Type visit(BooleanType n) {
-		return null;
+		return new BooleanType();
 	}
 
 	public Type visit(IntegerType n) {
-		return null;
+		return new IntegerType();
 	}
 
 	// String s;
-	public Type visit(IdentifierType n) {
+	public Type visit(IdentifierType n) { //Nao sei como fazer esse
 		return null;
 	}
 
@@ -160,7 +184,14 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 	// Exp e;
 	// Statement s1,s2;
 	public Type visit(If n) {
-		n.e.accept(this);
+		
+		Type expType = n.e.accept(this);
+		
+		if(!(expType instanceof BooleanType)) {
+			System.out.println("If: Expressão deve ser Booleano!");
+			return null;
+		}
+		
 		n.s1.accept(this);
 		n.s2.accept(this);
 		return null;
@@ -169,7 +200,14 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 	// Exp e;
 	// Statement s;
 	public Type visit(While n) {
-		n.e.accept(this);
+		
+		Type expType = n.e.accept(this);
+		
+		if(!(expType instanceof BooleanType)) {
+			System.out.println("While: Expressão deve ser Booleano!");
+			return null;
+		}
+		
 		n.s.accept(this);
 		return null;
 	}
@@ -183,65 +221,121 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 	// Identifier i;
 	// Exp e;
 	public Type visit(Assign n) {
-		n.i.accept(this);
-		n.e.accept(this);
+		
+		Type idType = n.i.accept(this);
+		Type expType = n.e.accept(this);
+		
+		if(!(symbolTable.compareTypes(idType, expType))) {
+			System.out.println("Assign: identificador e expressão não são do mesmo tipo!");
+		}
+		
 		return null;
 	}
 
 	// Identifier i;
 	// Exp e1,e2;
 	public Type visit(ArrayAssign n) {
-		n.i.accept(this);
-		n.e1.accept(this);
-		n.e2.accept(this);
+		
+		Type idType = n.i.accept(this);
+		Type expType1 = n.e1.accept(this);
+		Type expType2 = n.e2.accept(this);
+		
+		if(!(expType1 instanceof IntegerType)) {
+			System.out.println("ArrayAssign: indice não é inteiro!");
+			return null;
+		}
+		
+		if(!(idType instanceof IntArrayType)) {
+			System.out.println("ArrayAssign: identificador não é inteiro!");
+			return null;
+		}
+		
+		if(!(expType2 instanceof IntArrayType)) {
+			System.out.println("ArrayAssign: valor não é inteiro!");
+		}
+		
 		return null;
 	}
 
 	// Exp e1,e2;
 	public Type visit(And n) {
-		n.e1.accept(this);
-		n.e2.accept(this);
-		return null;
+		Type expType1 = n.e1.accept(this);
+		Type expType2 = n.e2.accept(this);
+		
+		if(!(expType1 instanceof BooleanType && expType2 instanceof BooleanType)) {
+			System.out.println("And: alguma expressão não é booleana!");
+		}
+		
+		return new BooleanType();
 	}
 
 	// Exp e1,e2;
 	public Type visit(LessThan n) {
-		n.e1.accept(this);
-		n.e2.accept(this);
-		return null;
+		Type expType1 = n.e1.accept(this);
+		Type expType2 = n.e2.accept(this);
+		
+		if(!(expType1 instanceof IntegerType && expType2 instanceof IntegerType)) {
+			System.out.println("LessThan: alguma expressão não é inteira!");
+		}
+		
+		return new BooleanType();
 	}
 
 	// Exp e1,e2;
 	public Type visit(Plus n) {
-		n.e1.accept(this);
-		n.e2.accept(this);
-		return null;
+		Type expType1 = n.e1.accept(this);
+		Type expType2 = n.e2.accept(this);
+		
+		if(!(expType1 instanceof IntegerType && expType2 instanceof IntegerType)) {
+			System.out.println("Plus: alguma expressão não é inteira!");
+		}
+		
+		return new IntegerType();
 	}
 
 	// Exp e1,e2;
 	public Type visit(Minus n) {
-		n.e1.accept(this);
-		n.e2.accept(this);
-		return null;
+		Type expType1 = n.e1.accept(this);
+		Type expType2 = n.e2.accept(this);
+		
+		if(!(expType1 instanceof IntegerType && expType2 instanceof IntegerType)) {
+			System.out.println("Minus: alguma expressão não é inteira!");
+		}
+		
+		return new IntegerType();
 	}
 
 	// Exp e1,e2;
 	public Type visit(Times n) {
-		n.e1.accept(this);
-		n.e2.accept(this);
-		return null;
+		Type expType1 = n.e1.accept(this);
+		Type expType2 = n.e2.accept(this);
+		
+		if(!(expType1 instanceof IntegerType && expType2 instanceof IntegerType)) {
+			System.out.println("Times: alguma expressão não é inteira!");
+		}
+		
+		return new IntegerType();
 	}
 
 	// Exp e1,e2;
 	public Type visit(ArrayLookup n) {
-		n.e1.accept(this);
-		n.e2.accept(this);
-		return null;
+		Type expType1 = n.e1.accept(this);
+		Type expType2 = n.e2.accept(this);
+		
+		if(!(expType1 instanceof IntegerType && expType2 instanceof IntegerType)) {
+			System.out.println("ArrayLookup: alguma expressão não é inteira!");
+		}
+		
+		return new IntegerType();
 	}
 
 	// Exp e;
 	public Type visit(ArrayLength n) {
-		n.e.accept(this);
+		Type expType = n.e.accept(this);
+		
+		if(!(expType instanceof IntegerType)) {
+			System.out.println("ArrayLength: expressão não é inteira!");
+		}
 		return null;
 	}
 
@@ -259,34 +353,40 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 
 	// int i;
 	public Type visit(IntegerLiteral n) {
-		return null;
+		return new IntegerType();
 	}
 
 	public Type visit(True n) {
-		return null;
+		return new BooleanType();
 	}
 
 	public Type visit(False n) {
-		return null;
+		return new BooleanType();
 	}
 
 	// String s;
-	public Type visit(IdentifierExp n) {
+	public Type visit(IdentifierExp n) {//Depios faço
 		return null;
 	}
 
 	public Type visit(This n) {
-		return null;
+		return currClass.type();
 	}
 
 	// Exp e;
 	public Type visit(NewArray n) {
-		n.e.accept(this);
-		return null;
+		Type expType = n.e.accept(this);
+		
+		if(!(expType instanceof IntegerType)) {
+			System.out.println("NewArray: expressão do tamanho do array não é inteira!");
+			return null;
+		}
+		
+		return new IntArrayType();
 	}
 
 	// Identifier i;
-	public Type visit(NewObject n) {
+	public Type visit(NewObject n) {//Depois tbm
 		return null;
 	}
 
