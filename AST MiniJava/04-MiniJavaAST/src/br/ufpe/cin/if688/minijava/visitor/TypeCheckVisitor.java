@@ -40,7 +40,13 @@ import br.ufpe.cin.if688.minijava.symboltable.SymbolTable;
 import br.ufpe.cin.if688.minijava.symboltable.Class;
 
 public class TypeCheckVisitor implements IVisitor<Type> {
-
+	/*Checklist of what is yest incomplete:
+	 * 	- MethodDecl
+	 * 	- Call
+	 * 	- IdentifierExp
+	 * 	- NewObject
+	 * 	- Identifier
+	 * */
 	private SymbolTable symbolTable;
 	private Class currClass;
 	private Method currMethod;
@@ -132,6 +138,8 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 	// VarDeclList vl;
 	// StatementList sl;
 	// Exp e;
+	
+	//here we need to check if the method returns something which matching type
 	public Type visit(MethodDecl n) {
 		n.t.accept(this);
 		n.i.accept(this);
@@ -188,7 +196,7 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 		Type expType = n.e.accept(this);
 		
 		if(!(expType instanceof BooleanType)) {
-			System.out.println("If: Expressão deve ser Booleano!");
+			System.out.println("If: Expressao deve ser Booleano!");
 			return null;
 		}
 		
@@ -226,7 +234,7 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 		Type expType = n.e.accept(this);
 		
 		if(!(symbolTable.compareTypes(idType, expType))) {
-			System.out.println("Assign: identificador e expressão não são do mesmo tipo!");
+			System.out.println("Assign: identificador e expressao nao sao do mesmo tipo!");
 		}
 		
 		return null;
@@ -241,17 +249,17 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 		Type expType2 = n.e2.accept(this);
 		
 		if(!(expType1 instanceof IntegerType)) {
-			System.out.println("ArrayAssign: indice não é inteiro!");
+			System.out.println("ArrayAssign: indice nao e inteiro!");
 			return null;
 		}
 		
 		if(!(idType instanceof IntArrayType)) {
-			System.out.println("ArrayAssign: identificador não é inteiro!");
+			System.out.println("ArrayAssign: identificador nao e inteiro!");
 			return null;
 		}
 		
 		if(!(expType2 instanceof IntArrayType)) {
-			System.out.println("ArrayAssign: valor não é inteiro!");
+			System.out.println("ArrayAssign: valor nao e inteiro!");
 		}
 		
 		return null;
@@ -287,7 +295,7 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 		Type expType2 = n.e2.accept(this);
 		
 		if(!(expType1 instanceof IntegerType && expType2 instanceof IntegerType)) {
-			System.out.println("Plus: alguma expressão não é inteira!");
+			System.out.println("Plus: alguma expressao nao e inteira!");
 		}
 		
 		return new IntegerType();
@@ -299,7 +307,7 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 		Type expType2 = n.e2.accept(this);
 		
 		if(!(expType1 instanceof IntegerType && expType2 instanceof IntegerType)) {
-			System.out.println("Minus: alguma expressão não é inteira!");
+			System.out.println("Minus: alguma expressao nao e inteira!");
 		}
 		
 		return new IntegerType();
@@ -311,7 +319,7 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 		Type expType2 = n.e2.accept(this);
 		
 		if(!(expType1 instanceof IntegerType && expType2 instanceof IntegerType)) {
-			System.out.println("Times: alguma expressão não é inteira!");
+			System.out.println("Times: alguma expressao nao e inteira!");
 		}
 		
 		return new IntegerType();
@@ -342,6 +350,7 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 	// Exp e;
 	// Identifier i;
 	// ExpList el;
+	//here we need to check if all parameters are proper, in number and type.
 	public Type visit(Call n) {
 		n.e.accept(this);
 		n.i.accept(this);
@@ -378,7 +387,7 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 		Type expType = n.e.accept(this);
 		
 		if(!(expType instanceof IntegerType)) {
-			System.out.println("NewArray: expressão do tamanho do array não é inteira!");
+			System.out.println("NewArray: expressao do tamanho do array nao e inteira!");
 			return null;
 		}
 		
