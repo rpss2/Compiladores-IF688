@@ -453,6 +453,23 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 
 	// String s;
 	public Type visit(Identifier n) {
-		return null;
+		if(this.currClass.containsVar(n.s)) {
+			return symbolTable.getVarType(currMethod, currClass, n.s);
+		}
+		if(this.currClass.containsMethod(n.s)) {
+			return symbolTable.getMethodType(n.s, currClass.getId());
+		}
+		if(this.currMethod != null && this.currMethod.containsVar(n.s)) {
+			return currMethod.getVar(n.s).type();
+		}
+		if(this.currMethod != null && this.currMethod.containsParam(n.s)) {
+			return this.currMethod.getParam(n.s).type();
+		} else {
+			Class classe = this.symbolTable.getClass(n.s);
+			if (classe == null) {
+				System.out.println("Varivavel nao foi encontrada!");
+			}
+			return classe.type();
+		}
 	}
 }
