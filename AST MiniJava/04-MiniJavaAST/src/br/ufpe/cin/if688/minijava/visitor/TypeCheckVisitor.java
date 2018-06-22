@@ -38,10 +38,10 @@ import br.ufpe.cin.if688.minijava.ast.While;
 import br.ufpe.cin.if688.minijava.symboltable.Method;
 import br.ufpe.cin.if688.minijava.symboltable.SymbolTable;
 import br.ufpe.cin.if688.minijava.symboltable.Class;
+import br.ufpe.cin.if688.minijava.symboltable.Variable;
 
 public class TypeCheckVisitor implements IVisitor<Type> {
 	/*Checklist of what is yest incomplete:
-	 * 	- Call
 	 * 	- Identifier
 	 * */
 	private SymbolTable symbolTable;
@@ -183,8 +183,8 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 	}
 
 	// String s;
-	public Type visit(IdentifierType n) { //Nao sei como fazer esse
-		return null;
+	public Type visit(IdentifierType n) {
+		return n;
 	}
 
 	// StatementList sl;
@@ -218,7 +218,7 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 		Type expType = n.e.accept(this);
 		
 		if(!(expType instanceof BooleanType)) {
-			System.out.println("While: Expressão deve ser Booleano!");
+			System.out.println("While: Expressao deve ser Booleano!");
 			return null;
 		}
 		
@@ -277,7 +277,7 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 		Type expType2 = n.e2.accept(this);
 		
 		if(!(expType1 instanceof BooleanType && expType2 instanceof BooleanType)) {
-			System.out.println("And: alguma expressão não é booleana!");
+			System.out.println("And: alguma expressão nao e booleana!");
 		}
 		
 		return new BooleanType();
@@ -289,7 +289,7 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 		Type expType2 = n.e2.accept(this);
 		
 		if(!(expType1 instanceof IntegerType && expType2 instanceof IntegerType)) {
-			System.out.println("LessThan: alguma expressão não é inteira!");
+			System.out.println("LessThan: alguma expressao nao e inteira!");
 		}
 		
 		return new BooleanType();
@@ -337,7 +337,7 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 		Type expType2 = n.e2.accept(this);
 		
 		if(!(expType1 instanceof IntegerType && expType2 instanceof IntegerType)) {
-			System.out.println("ArrayLookup: alguma expressão não é inteira!");
+			System.out.println("ArrayLookup: alguma expressao nao e inteira!");
 		}
 		
 		return new IntegerType();
@@ -348,7 +348,7 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 		Type expType = n.e.accept(this);
 		
 		if(!(expType instanceof IntegerType)) {
-			System.out.println("ArrayLength: expressão não é inteira!");
+			System.out.println("ArrayLength: expressão nao e inteira!");
 		}
 		return null;
 	}
@@ -358,12 +358,51 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 	// ExpList el;
 	//here we need to check if all parameters are proper, in number and type.
 	public Type visit(Call n) {
-		n.e.accept(this);
-		n.i.accept(this);
-		for (int i = 0; i < n.el.size(); i++) {
-			n.el.elementAt(i).accept(this);
+		//teremos que retornar o tipo no fim
+		Type typeReturned = null;
+		
+		Type aux = n.e.accept(this);
+		//n.i.accept(this);
+		if(n.e instanceof This) {
+			//se recursivo
+			typeReturned = currClass.getMethod(n.i.s).type();			
+		} else if (aux instanceof IdentifierType) {
+			Class callClass = this.symbolTable.getClass(((IdentifierType) aux).s);
+			Method callMethod = this.symbolTable.getMethod(n.i.toString(), callClass.getId());
+			
+			Class auxClass = this.currClass;
+			this.currClass = callClass;
+			
+			int c = 0;
+			for(; c < n.el.size(); c++) {
+				Type pamTypes = n.el.elementAt(c).accept(this);
+				Variable pamsDeclared = callMethod.getParamAt(c);
+				
+				//se nao houver parametros
+				if(pamsDeclared == null) {
+					System.out.println("Nao foram passados parametros!");
+					return null;
+				}
+				Type pamsDeclaredTypes = callMethod.getParamAt(c).type();
+				
+				//se os parametros passados forem do tipo errado
+				if(!(symbolTable.compareTypes(pamTypes, pamsDeclaredTypes))) {
+					System.out.println("Tipos dos parametros passados nao correspondem com os argumentos da funcao!");
+					return null;
+				}
+			}
+			if(callMethod.getParamAt(c) != null) {
+				System.out.println("Faltou parametros na chamada da funcao!");
+				return null;
+			}
+			
+			Type idType = n.i.accept(this);
+			this.currClass = auxClass;
+			return idType;
 		}
-		return null;
+		
+		
+		return typeReturned;
 	}
 
 	// int i;
