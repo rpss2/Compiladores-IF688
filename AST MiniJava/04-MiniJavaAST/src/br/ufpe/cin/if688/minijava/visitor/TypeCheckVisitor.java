@@ -42,7 +42,6 @@ import br.ufpe.cin.if688.minijava.symboltable.Class;
 public class TypeCheckVisitor implements IVisitor<Type> {
 	/*Checklist of what is yest incomplete:
 	 * 	- Call
-	 * 	- IdentifierExp
 	 * 	- Identifier
 	 * */
 	private SymbolTable symbolTable;
