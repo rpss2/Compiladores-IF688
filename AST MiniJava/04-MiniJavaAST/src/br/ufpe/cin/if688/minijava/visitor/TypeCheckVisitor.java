@@ -41,10 +41,8 @@ import br.ufpe.cin.if688.minijava.symboltable.Class;
 
 public class TypeCheckVisitor implements IVisitor<Type> {
 	/*Checklist of what is yest incomplete:
-	 * 	- MethodDecl
 	 * 	- Call
 	 * 	- IdentifierExp
-	 * 	- NewObject
 	 * 	- Identifier
 	 * */
 	private SymbolTable symbolTable;
@@ -404,8 +402,8 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 	}
 
 	// Identifier i;
-	public Type visit(NewObject n) {//Depois tbm
-		return null;
+	public Type visit(NewObject n) {
+		return n.i.accept(this);
 	}
 
 	// Exp e;
