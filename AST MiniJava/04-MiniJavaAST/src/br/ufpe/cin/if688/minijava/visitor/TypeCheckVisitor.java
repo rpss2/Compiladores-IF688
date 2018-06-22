@@ -381,8 +381,9 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 	}
 
 	// String s;
-	public Type visit(IdentifierExp n) {//Depios faço
-		return null;
+	public Type visit(IdentifierExp n) {
+		Type type = symbolTable.getVarType(currMethod, currClass, n.s);
+		return type;
 	}
 
 	public Type visit(This n) {
