@@ -141,8 +141,11 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 	
 	//here we need to check if the method returns something which matching type
 	public Type visit(MethodDecl n) {
-		n.t.accept(this);
+		this.currMethod = symbolTable.getMethod(n.i.s, this.currClass.getId());
+		
+		Type methodType = n.t.accept(this);
 		n.i.accept(this);
+		
 		for (int i = 0; i < n.fl.size(); i++) {
 			n.fl.elementAt(i).accept(this);
 		}
@@ -152,7 +155,13 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 		for (int i = 0; i < n.sl.size(); i++) {
 			n.sl.elementAt(i).accept(this);
 		}
-		n.e.accept(this);
+		
+		Type returnType = n.e.accept(this);
+		
+		if(!symbolTable.compareTypes(methodType, returnType)) {
+			System.out.println("MethodDecl: Metodo declarado tem um retorno de outro tipo");
+		}
+		this.currMethod = null;
 		return null;
 	}
 
