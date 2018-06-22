@@ -447,8 +447,12 @@ public class TypeCheckVisitor implements IVisitor<Type> {
 
 	// Exp e;
 	public Type visit(Not n) {
-		n.e.accept(this);
-		return null;
+		Type expType = n.e.accept(this);
+		if(!(expType instanceof BooleanType)) {
+			System.out.println("Not: expressao nao e booleana!");
+			return null;
+		}
+		return new BooleanType();
 	}
 
 	// String s;
